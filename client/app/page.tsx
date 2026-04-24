@@ -3,20 +3,23 @@ import { FileUpload } from "./components/file-upload";
 import { Chat } from "./components/chat";
 
 export default function Home() {
-  
   return (
-    <div>
-      <div className="min-w-screen h-screen flex">
-        <div className="w-[30vw] min-h-screen p-4 flex justify-center items-center">
-          <FileUpload/>
-          </div>
-        <div className="w-[70vw] min-h-screen border-l-2">
-          <div>
-             <Chat/>
-          </div>
+    <div className="flex h-screen w-screen bg-[#05070c]">
+
+    
+      <div className="w-[320px] border-r border-white/10 p-4 flex flex-col gap-4 flex justify-center items-center">
+        <div className="text-xs text-white/40 px-2">
+          DOCUMENTS
         </div>
+
+        <FileUpload />
+      </div>
+
+      {/* Right panel - Chat */}
+      <div className="flex-1">
+        <Chat />
       </div>
 
     </div>
-  );
+  )
 }

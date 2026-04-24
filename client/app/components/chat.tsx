@@ -1,88 +1,108 @@
 'use client'
-import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
+import * as React from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 interface Doc {
-  pageContent?: string;
-  metdata?: {
-    loc?: {
-      pageNumber?: number;
-    };
-    source?: string;
-  };
+  pageContent?: string
+  metadata?: {
+    loc?: { pageNumber?: number }
+    source?: string
+  }
 }
-
 
 interface IMessage {
-    role:"user" | "assistant",
-    content?:string,
-    documets?:Doc[]
+  role: "user" | "assistant"
+  content?: string
+  documents?: Doc[]
 }
 
-export const Chat:React.FC = () => {   
+export const Chat: React.FC = () => {
 
-const [message,setMessage] = React.useState("")
-const [messages,setMessages] = React.useState<IMessage[]>([]);
+  const [message, setMessage] = React.useState("")
+  const [messages, setMessages] = React.useState<IMessage[]>([])
 
+  const handlSendChat = async () => {
+    if (!message.trim()) return
 
-// const handlSendChat = async () => {
-  
-//     setMessages((prev)=>[...prev,{role:"user",content:message}])
-//     const res =  await fetch("http://localhost:8000/chat?message=" + message)
-//     const data = await res.json();
-    
-//     setMessages((prev)=>[...prev,{role:"assistant",content:data.message,documets:data.docs}])
-// }
-const handlSendChat = async () => {
-  setMessages((prev) => [...prev, { role: "user", content: message }]);
-  setMessage("");
+    const userMsg = message
+    setMessage("")
 
-  try {
-    const res = await fetch(
-      "http://localhost:8000/chat?message=" + encodeURIComponent(message)
-    );
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", content: userMsg }
+    ])
 
-    // ✅ Check if response is actually JSON before parsing
-    const contentType = res.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      const text = await res.text();
-      throw new Error(`Server returned non-JSON: ${text}`);
+    try {
+      const res = await fetch(
+        "http://localhost:8000/chat?message=" + encodeURIComponent(userMsg)
+      )
+
+      const data = await res.json()
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: data.message,
+          documents: data.docs
+        }
+      ])
+    } catch (err: any) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `Error: ${err.message}`
+        }
+      ])
     }
-
-    const data = await res.json();
-    setMessages((prev) => [
-      ...prev,
-      { role: "assistant", content: data.message, documents: data.docs },
-    ]);
-  } catch (err) {
-    console.error("Chat error:", err);
-    setMessages((prev) => [
-      ...prev,
-      { role: "assistant", content: `Error: ${err.message}` },
-    ]);
   }
-};
 
-return(
-    <>
-    <div className="p-4">
-        
-        <div>
-            {messages.map((msg,index)=>(
-                <pre key={index}>{JSON.stringify(msg,null,2)}</pre>
-            ))}
+  return (
+    <div className="flex flex-col h-full bg-[#0a0d14] text-white">
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+          >
+            <div
+              className={`
+                max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed
+                ${msg.role === "user"
+                  ? "bg-white text-black"
+                  : "bg-white/5 text-white border border-white/10"
+                }
+              `}
+            >
+              {msg.content}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Input */}
+      <div className="border-t border-white/10 p-4 bg-[#0a0d14]">
+        <div className="flex gap-3 items-center">
+          <Input
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Ask anything about your document..."
+            className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+          />
+
+          <Button
+            onClick={handlSendChat}
+            disabled={!message.trim()}
+            className="bg-white text-black hover:bg-white/80"
+          >
+            Send
+          </Button>
         </div>
-      <div className="fixed bottom-4 w-100 flex gap-3">
-        <Input
-         value={message}
-         onChange={(e) => setMessage(e.target.value)}
-         placeholder="Type your message here"></Input>
-        <Button onClick={handlSendChat} disabled={!message.trim()}>Send</Button>
       </div>
     </div>
-    </>
-)
-
+  )
 }
